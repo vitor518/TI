@@ -147,6 +147,7 @@ As credenciais padrão estão definidas no arquivo `.env.backend` (para PostgreS
 
 Você pode usar um cliente de banco de dados gráfico como DBeaver, DataGrip ou pgAdmin para se conectar ao PostgreSQL. Use as credenciais listadas acima. Como os bancos de dados estão rodando em contêineres Docker, mas com as portas mapeadas para o seu `localhost`, você pode se conectar a eles como se estivessem rodando localmente.
 
+
 ## Esquema do Banco de Dados (SQL)
 
 Abaixo está o esquema SQL para as tabelas de conteúdo do curso. A tabela `users` é gerenciada automaticamente pelo Sequelize.
@@ -198,3 +199,4 @@ Aqui estão algumas ideias para expandir o projeto:
 *   **Certificados de Conclusão**: Gerar certificados automaticamente quando um aluno completar um curso.
 *   **Painel de Administração**: Desenvolver uma área para que administradores possam criar, editar e gerenciar cursos, módulos e aulas.
 *   **Integração de Pagamentos**: Adicionar suporte a gateways de pagamento para vender cursos.
+
