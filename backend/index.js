@@ -3,7 +3,7 @@ const path = require('path');
 
 // Carregar .env.backend do root do projeto primeiro
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env.backend') });
-// Sobrescrever com .env.local se existir (para desenvolvimento local)
+// Sobrescrever com .env.local se existir
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env.local'), override: true });
 
 // Validar variáveis de ambiente críticas
@@ -13,7 +13,7 @@ const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingEnvVars.length > 0) {
   console.error('❌ Erro: Variáveis de ambiente obrigatórias não encontradas:');
   missingEnvVars.forEach(varName => console.error(`   - ${varName}`));
-  console.error('\nCertifique-se de ter um arquivo .env.backend ou .env.local na raiz do projeto.');
+  console.error('\nCertifique-se de ter um arquivo .env.backend na raiz do projeto.');
   process.exit(1);
 }
 
@@ -24,7 +24,7 @@ const sequelize = require('./db');
 const authRoutes = require('./routes/auth');
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 8000;
 
 // Middlewares
 app.use(cors());
@@ -65,16 +65,13 @@ async function startServer() {
   try {
     console.log('🔄 Testando conexão com o banco de dados...');
     
-    // Testar conexão com o banco
     await sequelize.authenticate();
-    console.log('✅ Conexão com o banco de dados estabelecida com sucesso.');
+    console.log('✅ Conexão com o banco de dados estabelecida.');
 
-    // Sincronizar modelos com o banco
     console.log('🔄 Sincronizando modelos com o banco de dados...');
-    await sequelize.sync({ alter: false }); // Use alter: true apenas em desenvolvimento se necessário
-    console.log('✅ Modelos sincronizados com sucesso.');
+    await sequelize.sync({ alter: false });
+    console.log('✅ Modelos sincronizados.');
 
-    // Iniciar o servidor
     app.listen(port, () => {
       console.log('================================');
       console.log(`✅ Servidor rodando na porta ${port}`);
@@ -88,40 +85,32 @@ async function startServer() {
     console.error(error);
     
     if (error.name === 'SequelizeConnectionError') {
-      console.error('\n💡 Dicas para resolver:');
+      console.error('\n💡 Dicas:');
       console.error('   1. Verifique se o PostgreSQL está rodando');
-      console.error('   2. Confirme as credenciais no arquivo .env.backend');
+      console.error('   2. Confirme as credenciais no .env.backend');
       console.error('   3. Verifique se o banco de dados existe');
-      console.error('   4. Confira o host e porta do PostgreSQL');
     }
     
     process.exit(1);
   }
 }
 
-// Tratamento de erros não capturados
+// Tratamento de erros
 process.on('unhandledRejection', (error) => {
-  console.error('❌ Erro não tratado (Promise Rejection):', error);
+  console.error('❌ Erro não tratado:', error);
   process.exit(1);
 });
 
-process.on('uncaughtException', (error) => {
-  console.error('❌ Erro não tratado (Exception):', error);
-  process.exit(1);
-});
-
-// Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('⚠️  SIGTERM recebido, encerrando servidor...');
+  console.log('⚠️  SIGTERM recebido, encerrando...');
   await sequelize.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('\n⚠️  SIGINT recebido, encerrando servidor...');
+  console.log('\n⚠️  SIGINT recebido, encerrando...');
   await sequelize.close();
   process.exit(0);
 });
 
-// Iniciar o servidor
 startServer();
