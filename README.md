@@ -146,3 +146,57 @@ As credenciais padrão estão definidas no arquivo `.env.backend` (para PostgreS
 ### Conectando com um Cliente de Banco de Dados
 
 Você pode usar um cliente de banco de dados gráfico como DBeaver, DataGrip ou pgAdmin para se conectar ao PostgreSQL. Use as credenciais listadas acima. Como os bancos de dados estão rodando em contêineres Docker, mas com as portas mapeadas para o seu `localhost`, você pode se conectar a eles como se estivessem rodando localmente.
+
+
+## Esquema do Banco de Dados (SQL)
+
+Abaixo está o esquema SQL para as tabelas de conteúdo do curso. A tabela `users` é gerenciada automaticamente pelo Sequelize.
+
+```sql
+-- Tabela para armazenar os cursos
+CREATE TABLE courses (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela para os módulos de um curso
+CREATE TABLE modules (
+    id SERIAL PRIMARY KEY,
+    course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    "order" INTEGER NOT NULL -- A ordem do módulo no curso
+);
+
+-- Tabela para as aulas de um módulo
+CREATE TABLE lessons (
+    id SERIAL PRIMARY KEY,
+    module_id INTEGER NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    video_url VARCHAR(255) NOT NULL, -- URL do vídeo da aula
+    "order" INTEGER NOT NULL, -- A ordem da aula no módulo
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela para rastrear o progresso do usuário
+CREATE TABLE user_progress (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    lesson_id INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    completed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, lesson_id) -- Garante que um usuário só pode completar uma aula uma vez
+);
+```
+
+## Ideias para Melhorias Futuras
+
+Aqui estão algumas ideias para expandir o projeto:
+
+*   **Gamificação**: Implementar um sistema de pontos, medalhas e ranking para incentivar o engajamento dos alunos.
+*   **Quizzes e Avaliações**: Adicionar quizzes ao final de cada módulo para testar o conhecimento dos alunos.
+*   **Fórum da Comunidade**: Criar um espaço para que os alunos possam discutir as aulas, tirar dúvidas e interagir.
+*   **Certificados de Conclusão**: Gerar certificados automaticamente quando um aluno completar um curso.
+*   **Painel de Administração**: Desenvolver uma área para que administradores possam criar, editar e gerenciar cursos, módulos e aulas.
+*   **Integração de Pagamentos**: Adicionar suporte a gateways de pagamento para vender cursos.
+
