@@ -1,0 +1,75 @@
+services:
+  # 1. SERVIÇO POSTGRESQL (Auth/Progresso)
+  postgres_db:
+    image: postgres:14-alpine
+    container_name: ti_postgres_db
+    environment:
+      POSTGRES_DB: TI_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 17112007
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. SERVIÇO MONGODB (Conteúdo)
+  mongodb_db:
+    image: mongo:latest
+    container_name: ti_mongodb_db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: 17112007
+      MONGO_INITDB_DATABASE: TI_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  # 3. SERVIÇO BACKEND (Node.js)
+  backend:
+    build:
+      context: ./backend # Pasta com o Dockerfile Node.js
+    container_name: ti_backend
+    command: npm run start:dev # Comando de execução do seu projeto
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.backend
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      mongodb_db:
+        condition: service_started
+
+  # 4. SERVIÇO FRONTEND (React)
+  frontend:
+    build:
+      context: ./frontend # Pasta com o Dockerfile React
+    container_name: ti_frontend
+    command: npm start # Comando de execução do seu projeto
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.frontend
+    environment:
+      # URL que o React usará para acessar a API do Backend Node.js
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  mongodb_data:
